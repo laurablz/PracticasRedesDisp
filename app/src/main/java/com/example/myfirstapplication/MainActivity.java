@@ -1,9 +1,12 @@
 package com.example.myfirstapplication;
 
+import static android.system.Os.connect;
+
 import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.location.LocationManager;
 import androidx.core.location.LocationManagerCompat;
 import android.content.BroadcastReceiver;
@@ -28,7 +31,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 
-
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -43,8 +47,6 @@ public class MainActivity extends AppCompatActivity {
     TextView statusLabel;
     ArrayList<String> deviceNames = new ArrayList<>();
     ArrayAdapter<String> adapter;
-
-
     ListView deviceListLabel;
 
     BluetoothAdapter bluetooth = BluetoothAdapter.getDefaultAdapter(); // Chip del bluetooth del teléfono
@@ -55,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<BluetoothDevice> deviceList = new ArrayList<BluetoothDevice>();
 
     private ActivityResultLauncher<Intent> locationSettingsLauncher;
+    private BluetoothSocket btSocket;
+    private InputStream inputStream;
+    private OutputStream outputStream;
 
 
 
@@ -130,6 +135,10 @@ public class MainActivity extends AppCompatActivity {
                 deviceNames
         );
         deviceListLabel.setAdapter(adapter);
+        deviceListLabel.setOnItemClickListener((parent, view, position, id) -> {
+            BluetoothDevice device = deviceList.get(position);
+            connect(device);
+        });
     }
 
     private boolean isLocationEnabled() {
@@ -182,6 +191,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         deviceList.clear();
+        deviceNames.clear();
+        adapter.notifyDataSetChanged();
+
         statusLabel.setText("Dispositivos encontrados:");
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_FOUND);
@@ -303,5 +315,30 @@ public class MainActivity extends AppCompatActivity {
 //                    ">>", e);
 //        }
 //    }
+protected void connect(BluetoothDevice device) {
+    new Thread(() -> {
+        try {
+            btSocket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
+
+            btSocket.connect();
+
+            Log.d("connect", "Client connected");
+
+            inputStream = btSocket.getInputStream();
+            outputStream = btSocket.getOutputStream();
+
+            runOnUiThread(() -> {
+                statusLabel.setText("Conectado");
+            });
+
+        } catch (Exception e) {
+            Log.e("ERROR: connect", ">>", e);
+
+            runOnUiThread(() -> {
+                statusLabel.setText("Error de conexión");
+            });
+        }
+    }).start();
+}
 
 }
