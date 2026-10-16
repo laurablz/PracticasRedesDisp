@@ -30,6 +30,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -40,6 +41,11 @@ public class MainActivity extends AppCompatActivity {
     Button turnLeftForwardButton;
     Button turnRightForwardButton;
     TextView statusLabel;
+    ArrayList<String> deviceNames = new ArrayList<>();
+    ArrayAdapter<String> adapter;
+
+
+    ListView deviceListLabel;
 
     BluetoothAdapter bluetooth = BluetoothAdapter.getDefaultAdapter(); // Chip del bluetooth del teléfono
     private static final int REQUEST_DISCOVERY = 1002;
@@ -66,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
         turnRightForwardButton= (Button) findViewById(R.id.rightButton);
 
         statusLabel = (TextView) findViewById(R.id.textView);
+        deviceListLabel = findViewById(R.id.deviceListLabel);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -115,6 +122,14 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
         );
+
+        // Para el device list
+        adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_list_item_1,
+                deviceNames
+        );
+        deviceListLabel.setAdapter(adapter);
     }
 
     private boolean isLocationEnabled() {
@@ -167,6 +182,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         deviceList.clear();
+        statusLabel.setText("Dispositivos encontrados:");
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
@@ -253,8 +269,15 @@ public class MainActivity extends AppCompatActivity {
                 int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
 
                 // Guardamos el dispositivo encontrado en la lista (si no es nulo)
-                if (remoteDevice != null) {
+                if (remoteDevice != null && !deviceList.contains(remoteDevice)) {
                     deviceList.add(remoteDevice);
+
+                    String name = (remoteDeviceName != null) ? remoteDeviceName : "Sin nombre";
+
+                    String mac = remoteDevice.getAddress();
+
+                    deviceNames.add(name + ": " + mac);
+                    adapter.notifyDataSetChanged();
                 }
 
                 // Mostramos el evento en el Log.
@@ -263,5 +286,22 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
+//    protected void connect(BluetoothDevice device) {
+//        try {
+//            btSocket = device.createRfcommSocketToServiceRecord(
+//                    UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
+//            btSocket.connect();
+//            Log.d("connect"
+//                    ,
+//                    "Client connected");
+//            inputStream = btSocket.getInputStream();
+//            outputStream = btSocket.getOutputStream();
+//        }catch (Exception e) {
+//            Log.e("ERROR: connect"
+//                    ,
+//                    ">>", e);
+//        }
+//    }
 
 }

@@ -7,6 +7,19 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <ListView
+        android:id="@+id/deviceListLabel"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="28dp"
+        android:layout_marginTop="110dp"
+        android:layout_marginEnd="28dp"
+        android:layout_marginBottom="53dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
+
     <Button
         android:id="@+id/forButton"
         android:layout_width="wrap_content"
@@ -57,13 +70,14 @@
         android:id="@+id/rightButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="133dp"
         android:backgroundTint="#7191EF"
         android:text="Right"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:textStyle="bold"
-        app:layout_constraintBaseline_toBaselineOf="@+id/stopButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/stopButton" />
+        app:layout_constraintStart_toEndOf="@+id/stopButton"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/backButton"
@@ -107,13 +121,11 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="180dp"
-        android:layout_marginTop="250dp"
-        android:layout_marginEnd="173dp"
-        android:layout_marginBottom="194dp"
+        android:layout_marginTop="306dp"
+        android:layout_marginBottom="413dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/backButton" />
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
