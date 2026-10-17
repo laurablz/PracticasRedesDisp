@@ -1,7 +1,5 @@
 package com.example.myfirstapplication;
 
-import static android.system.Os.connect;
-
 import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -44,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     Button backwardButton;
     Button turnLeftForwardButton;
     Button turnRightForwardButton;
+    Button stopButton;
     TextView statusLabel;
     ArrayList<String> deviceNames = new ArrayList<>();
     ArrayAdapter<String> adapter;
@@ -75,6 +74,14 @@ public class MainActivity extends AppCompatActivity {
         backwardButton= (Button) findViewById(R.id.backButton);
         turnLeftForwardButton= (Button) findViewById(R.id.leftButton);
         turnRightForwardButton= (Button) findViewById(R.id.rightButton);
+        stopButton= (Button) findViewById(R.id.stopButton);
+
+        forwardButton.setOnClickListener(v -> forward());
+        backwardButton.setOnClickListener(v -> backward());
+        turnLeftForwardButton.setOnClickListener(v -> left());
+        turnRightForwardButton.setOnClickListener(v -> right());
+        stopButton.setOnClickListener(v -> stop());
+        //disconnectButton.setOnClickListener(v -> disconnect());
 
         statusLabel = (TextView) findViewById(R.id.textView);
         deviceListLabel = findViewById(R.id.deviceListLabel);
@@ -137,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
         deviceListLabel.setAdapter(adapter);
         deviceListLabel.setOnItemClickListener((parent, view, position, id) -> {
             BluetoothDevice device = deviceList.get(position);
+            statusLabel.setText("Conectando dispositivo...");
             connect(device);
         });
     }
@@ -315,30 +323,71 @@ public class MainActivity extends AppCompatActivity {
 //                    ">>", e);
 //        }
 //    }
-protected void connect(BluetoothDevice device) {
-    new Thread(() -> {
+
+    private void disconnect() {
         try {
-            btSocket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
-
-            btSocket.connect();
-
-            Log.d("connect", "Client connected");
-
-            inputStream = btSocket.getInputStream();
-            outputStream = btSocket.getOutputStream();
-
-            runOnUiThread(() -> {
-                statusLabel.setText("Conectado");
-            });
-
+            stop();
+            if (btSocket != null) btSocket.close();
         } catch (Exception e) {
-            Log.e("ERROR: connect", ">>", e);
-
-            runOnUiThread(() -> {
-                statusLabel.setText("Error de conexión");
-            });
+            Log.e("disconnect", "ERROR:" + e);
         }
-    }).start();
-}
+        outputStream = null;
+        inputStream = null;
+        btSocket = null;
+        statusLabel.setText("Desconectado");
+    }
+    protected void connect(BluetoothDevice device) {
+        new Thread(() -> {
+            try {
+                btSocket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
+
+                btSocket.connect();
+
+                Log.d("connect", "Client connected");
+
+                inputStream = btSocket.getInputStream();
+                outputStream = btSocket.getOutputStream();
+
+                runOnUiThread(() -> {
+                    statusLabel.setText("Conectado");
+                });
+
+            } catch (Exception e) {
+                Log.e("ERROR: connect", ">>", e);
+
+                runOnUiThread(() -> {
+                    statusLabel.setText("Error de conexión");
+                });
+            }
+        }).start();
+    }
+
+    private void sendCommand(String cmd) {
+        try {
+            if (outputStream != null) {
+                outputStream.write(cmd.getBytes());
+                outputStream.flush();
+            }
+        } catch (Exception e) {
+            Log.e("sendCommand", "ERROR:" + e);
+        }
+    }
+
+    public void forward(){
+        sendCommand("w\n");
+    }
+    public void backward(){
+        sendCommand("s\n");
+    }
+    public void left(){
+        sendCommand("a\n");
+    }
+    public void right(){
+        sendCommand("d\n");
+    }
+    public void stop(){
+        sendCommand("0\n");
+    }
+
 
 }
