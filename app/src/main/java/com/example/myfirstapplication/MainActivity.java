@@ -43,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
     Button turnLeftForwardButton;
     Button turnRightForwardButton;
     Button stopButton;
+    Button horizontalLeftButton;
+    Button horizontalRightButton;
     TextView statusLabel;
     ArrayList<String> deviceNames = new ArrayList<>();
     ArrayAdapter<String> adapter;
@@ -75,13 +77,19 @@ public class MainActivity extends AppCompatActivity {
         turnLeftForwardButton= (Button) findViewById(R.id.leftButton);
         turnRightForwardButton= (Button) findViewById(R.id.rightButton);
         stopButton= (Button) findViewById(R.id.stopButton);
+        horizontalLeftButton = (Button) findViewById(R.id.horLeftButton);
+        horizontalRightButton = (Button) findViewById(R.id.horRightButton);
+
+
 
         forwardButton.setOnClickListener(v -> forward());
         backwardButton.setOnClickListener(v -> backward());
         turnLeftForwardButton.setOnClickListener(v -> left());
         turnRightForwardButton.setOnClickListener(v -> right());
         stopButton.setOnClickListener(v -> stop());
-        //disconnectButton.setOnClickListener(v -> disconnect());
+        disconnectButton.setOnClickListener(v -> disconnect());
+        horizontalLeftButton.setOnClickListener(v -> horizontalLeft());
+        horizontalRightButton.setOnClickListener(v->horizontalRight());
 
         statusLabel = (TextView) findViewById(R.id.textView);
         deviceListLabel = findViewById(R.id.deviceListLabel);
@@ -144,6 +152,14 @@ public class MainActivity extends AppCompatActivity {
         deviceListLabel.setAdapter(adapter);
         deviceListLabel.setOnItemClickListener((parent, view, position, id) -> {
             BluetoothDevice device = deviceList.get(position);
+
+            // Esto se supone que es para que pare la búsqueda antes de conectar el dispositivo
+//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+//                    ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
+//                            == PackageManager.PERMISSION_GRANTED) {
+//                bluetooth.cancelDiscovery();
+//            }
+
             statusLabel.setText("Conectando dispositivo...");
             connect(device);
         });
@@ -307,35 +323,6 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-//    protected void connect(BluetoothDevice device) {
-//        try {
-//            btSocket = device.createRfcommSocketToServiceRecord(
-//                    UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
-//            btSocket.connect();
-//            Log.d("connect"
-//                    ,
-//                    "Client connected");
-//            inputStream = btSocket.getInputStream();
-//            outputStream = btSocket.getOutputStream();
-//        }catch (Exception e) {
-//            Log.e("ERROR: connect"
-//                    ,
-//                    ">>", e);
-//        }
-//    }
-
-    private void disconnect() {
-        try {
-            stop();
-            if (btSocket != null) btSocket.close();
-        } catch (Exception e) {
-            Log.e("disconnect", "ERROR:" + e);
-        }
-        outputStream = null;
-        inputStream = null;
-        btSocket = null;
-        statusLabel.setText("Desconectado");
-    }
     protected void connect(BluetoothDevice device) {
         new Thread(() -> {
             try {
@@ -362,6 +349,19 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    public void disconnect(){
+        try{
+            if (btSocket != null){
+                btSocket.close();
+                btSocket = null;
+            }
+            inputStream = null;
+            outputStream = null;
+            statusLabel.setText("Desconectado");
+        }catch (Exception e){
+            Log.e("Bluetooth", "Error en la desconexión");
+        }
+    }
     private void sendCommand(String cmd) {
         try {
             if (outputStream != null) {
@@ -373,21 +373,37 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+
     public void forward(){
+        sendCommand("1\n");
         sendCommand("w\n");
     }
     public void backward(){
+        sendCommand("1\n");
         sendCommand("s\n");
     }
     public void left(){
+        sendCommand("1\n");
         sendCommand("a\n");
     }
     public void right(){
+        sendCommand("1\n");
         sendCommand("d\n");
+    }
+
+    public void horizontalLeft(){
+        sendCommand("1\n");
+        sendCommand("q\n");
+    }
+    public void horizontalRight(){
+        sendCommand("1\n");
+        sendCommand("e\n");
     }
     public void stop(){
         sendCommand("0\n");
     }
+
 
 
 }
