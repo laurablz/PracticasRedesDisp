@@ -49,6 +49,10 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> deviceNames = new ArrayList<>();
     ArrayAdapter<String> adapter;
     ListView deviceListLabel;
+    SeekBar speedBar;
+    private int speed = 1;
+    private boolean moving = false;
+    private String lastDirection = "";
 
     BluetoothAdapter bluetooth = BluetoothAdapter.getDefaultAdapter(); // Chip del bluetooth del teléfono
     private static final int REQUEST_DISCOVERY = 1002;
@@ -152,16 +156,21 @@ public class MainActivity extends AppCompatActivity {
         deviceListLabel.setAdapter(adapter);
         deviceListLabel.setOnItemClickListener((parent, view, position, id) -> {
             BluetoothDevice device = deviceList.get(position);
-
-            // Esto se supone que es para que pare la búsqueda antes de conectar el dispositivo
-//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
-//                    ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
-//                            == PackageManager.PERMISSION_GRANTED) {
-//                bluetooth.cancelDiscovery();
-//            }
-
             statusLabel.setText("Conectando dispositivo...");
             connect(device);
+        });
+
+        // La velocidad
+        speedBar = findViewById(R.id.speedBar);
+        speedBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
+                if (fromUser) {
+                    setSpeed(progress + 1);
+                }
+            }
+            @Override public void onStartTrackingTouch(SeekBar sb) {}
+            @Override public void onStopTrackingTouch(SeekBar sb) {}
         });
     }
 
@@ -358,6 +367,9 @@ public class MainActivity extends AppCompatActivity {
             inputStream = null;
             outputStream = null;
             statusLabel.setText("Desconectado");
+            moving = false;
+            speed = 1;
+            speedBar.setProgress(0);
         }catch (Exception e){
             Log.e("Bluetooth", "Error en la desconexión");
         }
@@ -374,35 +386,47 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private void setSpeed(int newSpeed) {
+        if (newSpeed < 1 || newSpeed > 3) return;
+        speed = newSpeed;
+        statusLabel.setText("Velocidad: " + speed);
 
-    public void forward(){
-        sendCommand("1\n");
-        sendCommand("w\n");
-    }
-    public void backward(){
-        sendCommand("1\n");
-        sendCommand("s\n");
-    }
-    public void left(){
-        sendCommand("1\n");
-        sendCommand("a\n");
-    }
-    public void right(){
-        sendCommand("1\n");
-        sendCommand("d\n");
+        // Solo se aplica al momento si el robot se está moviendo
+        if (moving) {
+            move(lastDirection);
+        }
     }
 
-    public void horizontalLeft(){
-        sendCommand("1\n");
-        sendCommand("q\n");
+    private void move(String direction) {
+        moving = true;
+        lastDirection = direction;
+        sendCommand(speed + "\n");
+        sendCommand(direction + "\n");
     }
-    public void horizontalRight(){
-        sendCommand("1\n");
-        sendCommand("e\n");
-    }
+
     public void stop(){
+        moving = false;
         sendCommand("0\n");
     }
+    public void forward(){
+        move("w");
+    }
+    public void backward(){
+        move("s");
+    }
+    public void left(){
+        move("a");
+    }
+    public void right(){
+        move("d");
+    }
+    public void horizontalLeft(){
+        move("q");
+    }
+    public void horizontalRight(){
+        move("e");
+    }
+
 
 
 
